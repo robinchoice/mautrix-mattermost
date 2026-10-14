@@ -57,6 +57,30 @@ func TestLogin(t *testing.T) {
 	assert.Equal(t, "Robin", user.DisplayName())
 }
 
+func TestCreatePost(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/api/v4/posts", r.URL.Path)
+		var body map[string]any
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		assert.Equal(t, map[string]any{
+			"channel_id":      "c1",
+			"message":         "hi",
+			"root_id":         "r1",
+			"pending_post_id": "txn1",
+		}, body)
+		w.WriteHeader(http.StatusCreated)
+		_, _ = w.Write([]byte(`{"id":"p1","create_at":1760000000000,"user_id":"u1","channel_id":"c1","root_id":"r1","message":"hi","pending_post_id":"txn1"}`))
+	}))
+	defer srv.Close()
+
+	post, err := (&Client{ServerURL: srv.URL}).CreatePost(context.Background(), &Post{ChannelID: "c1", Message: "hi", RootID: "r1", PendingPostID: "txn1"})
+	require.NoError(t, err)
+	assert.Equal(t, "p1", post.ID)
+	assert.Equal(t, "u1", post.UserID)
+	assert.EqualValues(t, 1760000000000, post.CreateAt)
+}
+
 func TestListen(t *testing.T) {
 	post := Post{ID: "p1", ChannelID: "c1", UserID: "u2", Message: "hello", CreateAt: 1760000000000}
 	postJSON, _ := json.Marshal(post)

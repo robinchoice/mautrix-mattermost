@@ -57,6 +57,7 @@ func (mc *MattermostClient) handlePost(ctx context.Context, channelType mattermo
 			StreamOrder:  post.CreateAt,
 		},
 		Data:               post,
+		TransactionID:      networkid.TransactionID(post.PendingPostID),
 		ID:                 networkid.MessageID(post.ID),
 		ConvertMessageFunc: convertPost,
 	})

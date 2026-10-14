@@ -94,6 +94,17 @@ func (c *Client) GetChannel(ctx context.Context, channelID string) (*Channel, er
 	return &channel, c.getJSON(ctx, "/channels/"+url.PathEscape(channelID), &channel)
 }
 
+// CreatePost sends a post and returns it as the server stored it.
+func (c *Client) CreatePost(ctx context.Context, post *Post) (*Post, error) {
+	resp, err := c.do(ctx, http.MethodPost, "/posts", post)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var created Post
+	return &created, json.NewDecoder(resp.Body).Decode(&created)
+}
+
 func (c *Client) GetProfileImage(ctx context.Context, userID string) ([]byte, error) {
 	resp, err := c.do(ctx, http.MethodGet, "/users/"+url.PathEscape(userID)+"/image", nil)
 	if err != nil {

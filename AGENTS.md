@@ -22,5 +22,6 @@ A push to `main` runs CI and publishes `latest` and `sha-<commit>` images for am
 
 - Commits need a DCO sign-off: `git commit -s`.
 - Mattermost keeps a websocket open after its session is revoked and just stops sending events. A revoked token on reconnect is also accepted and then closed without a 401. Only `GET /users/me` tells, which is why `Listen` checks it.
+- Mattermost doesn't store `pending_post_id`: only the websocket `posted` event carries it, `GET /posts` returns it empty. The bridge sets it to the Matrix event ID to recognise its own echoes.
 - Without a scheme, `NormalizeServerURL` assumes `https://`.
 - Full end-to-end testing needs Mattermost Team Edition plus a Synapse. Never test against the enterprise image (licence terms, see twalk#241 D2).

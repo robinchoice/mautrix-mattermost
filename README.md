@@ -4,17 +4,24 @@ An **unofficial** Matrix-Mattermost puppeting bridge built on [mautrix-go](https
 
 ## Status
 
-Early first slice: Mattermost → Matrix only.
+Early: text messages in public and private channels, both directions.
 
 Works:
 - Login with server URL, username or email, and password. No admin rights are needed, so it works on servers where personal access tokens are disabled.
 - New posts in public and private channels arrive in Matrix as they're sent, one portal room per channel. Markdown is converted, and thread replies become Matrix threads.
+- Text messages sent from Matrix are posted to the channel, with Matrix formatting converted to Markdown. Notices are sent too if `bridge_notices` is enabled in the config. Underline has no Markdown equivalent and is dropped.
+- Replies in a Matrix thread become replies in the Mattermost thread.
+- Your own posts come back from Mattermost as echoes and don't show up twice in Matrix.
 - An expired or revoked session is reported as bad credentials, so the user knows to log in again.
 
+Matrix replies outside a thread also become thread replies, attached to the thread of the message you replied to. Mattermost has no other kind of reply: its reply button opens the thread. Posting a reply as a plain message would lose the context it refers to. The bridge advertises threads but not replies in its room capabilities, so bridgev2 does this conversion itself.
+
+Images, files, emotes, locations, edits, deletions and reactions from Matrix are rejected with an error message status. Rejected images, files and emotes also get a notice in the room.
+
 Not yet:
-- Sending from Matrix to Mattermost
 - Direct and group messages
 - Edits, deletions, reactions, attachments, backfill
+- Mentions from Matrix (a Matrix pill becomes the display name, not an `@username`)
 - Personal access token login, MFA
 - Syncing channel members and teams as spaces
 

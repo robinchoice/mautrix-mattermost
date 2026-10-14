@@ -47,14 +47,16 @@ type Channel struct {
 }
 
 type Post struct {
-	ID        string   `json:"id"`
-	CreateAt  int64    `json:"create_at"`
-	UserID    string   `json:"user_id"`
+	ID        string   `json:"id,omitempty"`
+	CreateAt  int64    `json:"create_at,omitempty"`
+	UserID    string   `json:"user_id,omitempty"`
 	ChannelID string   `json:"channel_id"`
-	RootID    string   `json:"root_id"`
+	RootID    string   `json:"root_id,omitempty"`
 	Message   string   `json:"message"`
-	Type      string   `json:"type"`
-	FileIDs   []string `json:"file_ids"`
+	Type      string   `json:"type,omitempty"`
+	FileIDs   []string `json:"file_ids,omitempty"`
+	// PendingPostID is set by the sending client and comes back unchanged in the posted event.
+	PendingPostID string `json:"pending_post_id,omitempty"`
 }
 
 // IsSystem reports whether the post is a system message like "X joined the channel".

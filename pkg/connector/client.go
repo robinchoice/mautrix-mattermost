@@ -2,7 +2,6 @@ package connector
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"sync/atomic"
 	"time"
@@ -139,10 +138,4 @@ func (mc *MattermostClient) LogoutRemote(ctx context.Context) {
 
 func (mc *MattermostClient) IsThisUser(ctx context.Context, userID networkid.UserID) bool {
 	return string(userID) == mc.ownUserID
-}
-
-var errSendingNotSupported = errors.New("sending messages to Mattermost isn't supported yet")
-
-func (mc *MattermostClient) HandleMatrixMessage(ctx context.Context, msg *bridgev2.MatrixMessage) (*bridgev2.MatrixMessageResponse, error) {
-	return nil, bridgev2.WrapErrorInStatus(errSendingNotSupported).WithIsCertain(true).WithSendNotice(true)
 }
