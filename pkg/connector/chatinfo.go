@@ -64,7 +64,7 @@ func (mc *MattermostConnector) GetCapabilities() *bridgev2.NetworkGeneralCapabil
 
 func (mc *MattermostClient) GetCapabilities(ctx context.Context, portal *bridgev2.Portal) *event.RoomFeatures {
 	return &event.RoomFeatures{
-		ID: "com.github.robinchoice.mattermost.capabilities.2026_10_14",
+		ID: "com.github.robinchoice.mattermost.capabilities.2026_10_14.1",
 		Formatting: event.FormattingFeatureMap{
 			event.FmtBold:               event.CapLevelFullySupported,
 			event.FmtItalic:             event.CapLevelFullySupported,
@@ -75,6 +75,7 @@ func (mc *MattermostClient) GetCapabilities(ctx context.Context, portal *bridgev
 			event.FmtSyntaxHighlighting: event.CapLevelFullySupported,
 			event.FmtBlockquote:         event.CapLevelFullySupported,
 			event.FmtInlineLink:         event.CapLevelFullySupported,
+			event.FmtUserLink:           event.CapLevelFullySupported,
 			event.FmtUnorderedList:      event.CapLevelFullySupported,
 			event.FmtOrderedList:        event.CapLevelFullySupported,
 			event.FmtHeaders:            event.CapLevelFullySupported,

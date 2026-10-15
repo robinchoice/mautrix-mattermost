@@ -11,6 +11,7 @@ Works:
 - New posts in public and private channels arrive in Matrix as they're sent, one portal room per channel. Markdown is converted, and thread replies become Matrix threads.
 - Text messages sent from Matrix are posted to the channel, with Matrix formatting converted to Markdown. Notices are sent too if `bridge_notices` is enabled in the config. Underline has no Markdown equivalent and is dropped.
 - Replies in a Matrix thread become replies in the Mattermost thread.
+- Mentions (pills) of Mattermost users become `@username`, including Matrix users logged in to the same Mattermost server. Other Matrix users stay as their display name.
 - Your own posts come back from Mattermost as echoes and don't show up twice in Matrix.
 - An expired or revoked session is reported as bad credentials, so the user knows to log in again.
 
@@ -21,7 +22,7 @@ Images, files, emotes, locations, edits, deletions and reactions from Matrix are
 Not yet:
 - Direct and group messages
 - Edits, deletions, reactions, attachments, backfill
-- Mentions from Matrix (a Matrix pill becomes the display name, not an `@username`)
+- `@room` to `@channel`
 - Personal access token login, MFA
 - Syncing channel members and teams as spaces
 

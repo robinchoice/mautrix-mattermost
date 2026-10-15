@@ -1,6 +1,7 @@
 package connector
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,12 @@ import (
 	"maunium.net/go/mautrix/bridgev2/database"
 	"maunium.net/go/mautrix/bridgev2/networkid"
 	"maunium.net/go/mautrix/event"
+	"maunium.net/go/mautrix/id"
 )
+
+func noUsernames(context.Context, id.UserID) string {
+	return ""
+}
 
 func makeMatrixMessage(content *event.MessageEventContent, threadRoot *database.Message) *bridgev2.MatrixMessage {
 	return &bridgev2.MatrixMessage{
@@ -22,35 +28,52 @@ func makeMatrixMessage(content *event.MessageEventContent, threadRoot *database.
 }
 
 func TestConvertMatrixMessage(t *testing.T) {
-	post, err := convertMatrixMessage(makeMatrixMessage(&event.MessageEventContent{
+	post, err := convertMatrixMessage(context.Background(), makeMatrixMessage(&event.MessageEventContent{
 		MsgType:       event.MsgText,
 		Body:          "hi there, see link",
 		Format:        event.FormatHTML,
 		FormattedBody: `<strong>hi</strong> <u>there</u>, see <a href="https://example.org">link</a>`,
-	}, nil))
+	}, nil), noUsernames)
 	require.NoError(t, err)
 	assert.Equal(t, "channel1", post.ChannelID)
 	assert.Equal(t, "**hi** there, see [link](https://example.org)", post.Message)
 	assert.Empty(t, post.RootID)
 
-	post, err = convertMatrixMessage(makeMatrixMessage(&event.MessageEventContent{
+	post, err = convertMatrixMessage(context.Background(), makeMatrixMessage(&event.MessageEventContent{
 		MsgType: event.MsgNotice,
 		Body:    "plain *as typed*",
-	}, &database.Message{ID: "root1"}))
+	}, &database.Message{ID: "root1"}), noUsernames)
 	require.NoError(t, err)
 	assert.Equal(t, "plain *as typed*", post.Message)
 	assert.Equal(t, "root1", post.RootID)
 
 	// A Matrix thread started on a message that is itself a Mattermost thread reply
-	post, err = convertMatrixMessage(makeMatrixMessage(&event.MessageEventContent{
+	post, err = convertMatrixMessage(context.Background(), makeMatrixMessage(&event.MessageEventContent{
 		MsgType: event.MsgText,
 		Body:    "nested",
-	}, &database.Message{ID: "reply1", ThreadRoot: "root1"}))
+	}, &database.Message{ID: "reply1", ThreadRoot: "root1"}), noUsernames)
 	require.NoError(t, err)
 	assert.Equal(t, "root1", post.RootID)
 
 	for _, msgType := range []event.MessageType{event.MsgImage, event.MsgFile, event.MsgEmote} {
-		_, err = convertMatrixMessage(makeMatrixMessage(&event.MessageEventContent{MsgType: msgType, Body: "x"}, nil))
+		_, err = convertMatrixMessage(context.Background(), makeMatrixMessage(&event.MessageEventContent{MsgType: msgType, Body: "x"}, nil), noUsernames)
 		assert.ErrorIs(t, err, bridgev2.ErrUnsupportedMessageType, msgType)
 	}
+}
+
+func TestConvertMatrixMentions(t *testing.T) {
+	usernames := func(_ context.Context, mxid id.UserID) string {
+		if mxid == "@mattermost_u1:example.org" {
+			return "alice"
+		}
+		return ""
+	}
+	post, err := convertMatrixMessage(context.Background(), makeMatrixMessage(&event.MessageEventContent{
+		MsgType:       event.MsgText,
+		Body:          "Alice and Bob: hi",
+		Format:        event.FormatHTML,
+		FormattedBody: `<a href="https://matrix.to/#/@mattermost_u1:example.org">Alice</a> and <a href="https://matrix.to/#/@bob:example.org">Bob</a>: hi`,
+	}, nil), usernames)
+	require.NoError(t, err)
+	assert.Equal(t, "@alice and Bob: hi", post.Message)
 }

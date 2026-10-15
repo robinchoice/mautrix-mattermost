@@ -2,13 +2,16 @@ package connector
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
 	"maunium.net/go/mautrix/bridgev2"
 	"maunium.net/go/mautrix/bridgev2/database"
 	"maunium.net/go/mautrix/bridgev2/networkid"
 	"maunium.net/go/mautrix/event"
 	"maunium.net/go/mautrix/format"
+	"maunium.net/go/mautrix/id"
 
 	"github.com/robinchoice/mautrix-mattermost/pkg/mattermost"
 )
@@ -23,7 +26,7 @@ var matrixHTMLParser = func() *format.HTMLParser {
 }()
 
 func (mc *MattermostClient) HandleMatrixMessage(ctx context.Context, msg *bridgev2.MatrixMessage) (*bridgev2.MatrixMessageResponse, error) {
-	post, err := convertMatrixMessage(msg)
+	post, err := convertMatrixMessage(ctx, msg, mc.getMattermostUsername)
 	if err != nil {
 		return nil, err
 	}
@@ -48,14 +51,50 @@ func (mc *MattermostClient) HandleMatrixMessage(ctx context.Context, msg *bridge
 	}, nil
 }
 
-func convertMatrixMessage(msg *bridgev2.MatrixMessage) (*mattermost.Post, error) {
+// getMattermostUsername finds the Mattermost username for a ghost or for a Matrix user logged in
+// to the same server. It returns "" if there is none.
+func (mc *MattermostClient) getMattermostUsername(ctx context.Context, mxid id.UserID) string {
+	userID, isGhost := mc.Main.Bridge.Matrix.ParseGhostMXID(mxid)
+	if !isGhost {
+		user, err := mc.Main.Bridge.GetExistingUserByMXID(ctx, mxid)
+		if err != nil || user == nil {
+			return ""
+		}
+		for _, login := range user.GetUserLogins() {
+			if login.Metadata.(*UserLoginMetadata).ServerURL == mc.Client.ServerURL {
+				userID = networkid.UserID(login.ID)
+				break
+			}
+		}
+		if userID == "" {
+			return ""
+		}
+	}
+	user, err := mc.Client.GetUser(ctx, string(userID))
+	if err != nil {
+		zerolog.Ctx(ctx).Warn().Err(err).Stringer("mxid", mxid).Msg("Failed to get Mattermost user for mention")
+		return ""
+	}
+	return user.Username
+}
+
+func convertMatrixMessage(ctx context.Context, msg *bridgev2.MatrixMessage, getUsername func(context.Context, id.UserID) string) (*mattermost.Post, error) {
 	content := msg.Content
 	if content.MsgType != event.MsgText && content.MsgType != event.MsgNotice {
 		return nil, bridgev2.ErrUnsupportedMessageType
 	}
 	text := content.Body
 	if content.Format == event.FormatHTML && content.FormattedBody != "" {
-		text, _ = format.HTMLToMarkdownFull(matrixHTMLParser, content.FormattedBody)
+		parser := *matrixHTMLParser
+		parser.PillConverter = func(displayname, mxid, eventID string, fctx format.Context) string {
+			if strings.HasPrefix(mxid, "@") {
+				if username := getUsername(fctx.Ctx, id.UserID(mxid)); username != "" {
+					return "@" + username
+				}
+			}
+			return format.DefaultPillConverter(displayname, mxid, eventID, fctx)
+		}
+		text = parser.Parse(content.FormattedBody, format.NewContext(ctx))
 	}
 	post := &mattermost.Post{ChannelID: string(msg.Portal.ID), Message: text}
 	// Mattermost threads hang off the root post, replies to replies aren't a thing.
