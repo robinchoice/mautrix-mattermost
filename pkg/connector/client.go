@@ -38,7 +38,7 @@ func (mc *MattermostConnector) LoadUserLogin(ctx context.Context, login *bridgev
 			HTTP:      &http.Client{Timeout: 60 * time.Second},
 			UserAgent: mautrix.DefaultUserAgent,
 		},
-		ownUserID: string(login.ID),
+		ownUserID: parseUserLoginID(login.ID),
 	}
 	client.loggedIn.Store(meta.Token != "")
 	login.Client = client

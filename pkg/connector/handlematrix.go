@@ -62,7 +62,7 @@ func (mc *MattermostClient) getMattermostUsername(ctx context.Context, mxid id.U
 		}
 		for _, login := range user.GetUserLogins() {
 			if login.Metadata.(*UserLoginMetadata).ServerURL == mc.Client.ServerURL {
-				userID = networkid.UserID(login.ID)
+				userID = networkid.UserID(parseUserLoginID(login.ID))
 				break
 			}
 		}

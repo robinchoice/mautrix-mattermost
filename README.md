@@ -7,7 +7,7 @@ An **unofficial** Matrix-Mattermost puppeting bridge built on [mautrix-go](https
 Early: text messages in public and private channels, both directions.
 
 Works:
-- Login with server URL, username or email, and password. No admin rights are needed, so it works on servers where personal access tokens are disabled.
+- Login flow `credentials`: first the server URL, then username or email and password. No admin rights are needed, so it works on servers where personal access tokens are disabled. Login IDs are `<host>/<user id>`, so one bridge can serve logins on several servers.
 - New posts in public and private channels arrive in Matrix as they're sent, one portal room per channel. Markdown is converted, and thread replies become Matrix threads.
 - Text messages sent from Matrix are posted to the channel, with Matrix formatting converted to Markdown. Notices are sent too if `bridge_notices` is enabled in the config. Underline has no Markdown equivalent and is dropped.
 - Replies in a Matrix thread become replies in the Mattermost thread.
@@ -35,7 +35,7 @@ Setup follows the [mautrix bridgev2 docs](https://docs.mau.fi/bridges/go/setup.h
 1. Start the container with an empty `/data` volume. It writes `config.yaml` and exits.
 2. Edit the config (homeserver address and domain, database, permissions) and start it again. It writes `registration.yaml` and exits.
 3. Register `registration.yaml` with your homeserver, then start the bridge.
-4. Open a DM with the bridge bot (`@mattermostbot:your.domain` by default) and send `login password`.
+4. Open a DM with the bridge bot (`@mattermostbot:your.domain` by default) and send `login credentials`.
 
 The bridge stores the Mattermost session token in its database, not your password. Logging out from the bridge ends that session on the Mattermost server.
 

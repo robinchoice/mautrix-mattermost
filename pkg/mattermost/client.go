@@ -79,6 +79,19 @@ func (c *Client) Logout(ctx context.Context) error {
 	return resp.Body.Close()
 }
 
+// Ping checks that ServerURL points to a Mattermost server. It needs no session.
+func (c *Client) Ping(ctx context.Context) error {
+	var resp struct {
+		Status string `json:"status"`
+	}
+	if err := c.getJSON(ctx, "/system/ping", &resp); err != nil {
+		return err
+	} else if resp.Status != "OK" {
+		return fmt.Errorf("unexpected ping status %q", resp.Status)
+	}
+	return nil
+}
+
 func (c *Client) GetMe(ctx context.Context) (*User, error) {
 	var user User
 	return &user, c.getJSON(ctx, "/users/me", &user)
