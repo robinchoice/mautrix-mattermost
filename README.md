@@ -1,6 +1,6 @@
 # mautrix-mattermost
 
-An **unofficial** Matrix-Mattermost puppeting bridge built on [mautrix-go](https://github.com/mautrix/go)'s bridgev2 framework. It is not affiliated with mautrix or Mattermost. The goal is to contribute it upstream. Until then it lives here, coordinated with [linagora/twalk#241](https://github.com/linagora/twalk/issues/241).
+An **unofficial** Matrix-Mattermost puppeting bridge built on [mautrix-go](https://github.com/mautrix/go)'s bridgev2 framework. It is not affiliated with mautrix or Mattermost. The goal is to contribute it upstream. Until then it lives here.
 
 ## Status
 
